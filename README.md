@@ -7,6 +7,5 @@ It should be able to output:
 - Fixation Starting Position
 - Fixation End/Landing Position
 - Fixation Duration
-- Cumulative Trial Time by end of Fixation
 
 The following functions were written to extract information for an EyeLink 1000 from SR Research.
