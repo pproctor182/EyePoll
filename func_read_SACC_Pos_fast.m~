@@ -1,0 +1,109 @@
+function func_read_SACC_POS_fast(subject_id,sess_id)
+
+%subject_id: This is the subject id (in string) of the person who participated in your experiment.
+%sess_id: This is the session id (in integer/number value) that the subject participated in. There can be more than one session!
+
+% Data Input Preparation:
+% All .ASC files should be in the ./ASC_Data_Folder
+
+% Data Output Preparation:
+% All Output files should go to the:
+% ./Sacc_Data/Fast/Start/'subject_id'/'sess_id_str'/
+% ./Sacc_Data/Fast/End/'subject_id'/'sess_id_str'/
+
+% You should create these folders.
+
+% EyeLink Best practices:
+% Send a 'Trial X flag' everytime a subject begins a trial. 
+% The parser is checking for these flags to make sure it collects the correct information.
+
+sess_id_str = num2str(sess_id);
+
+file_name = strcat('./ASC_Data_Folder/',subject_id,'_',sess_id_str,'.asc');
+
+fid = fopen(file_name);
+
+num_trials = 100; %Assume 100 trials. Change this parameters however you please. You can change this for a function too.
+
+for n=1:num_trials
+
+
+	%Show Trial progress:
+	disp(n)
+
+	n_str = num2str(n);
+	trial_str = ['Trial ' n_str];
+
+	trial_str_sharp = ['Trial' n_str];
+
+	fid_name_start = ['./Sacc_Data/Fast/Start/' subject_id '/' sess_id_str '/' trial_str_sharp  '.csv'];
+	fid_name_end = ['./Sacc_Data/Fast/End/' subject_id '/' sess_id_str '/' trial_str_sharp  '.csv'];
+
+	fid_temp_start = fopen(fid_name_start,'w');
+	fid_temp_end = fopen(fid_name_end,'w');
+
+	tline = fgetl(fid);
+	while ischar(tline);
+
+		tline = fgetl(fid);
+
+		if ~isempty(strfind(tline,trial_str))
+			disp('FOUND YOU HERE!')
+
+			while(1)
+				tline =fgetl(fid);
+
+				if strfind(tline,'END');
+					fclose(fid_temp_start);
+					fclose(fid_temp_end);
+
+					break;
+				end
+
+				if ~isempty(strfind(tline,'EFIX')) || ~isempty(strfind(tline,'SFIX')) || ~isempty(strfind(tline,'SSACC')) || ~isempty(strfind(tline,'EBLINK')) || ~isempty(strfind(tline,'SBLINK'))%|| ~isempty(strfind(tline,'ESACC')) %... || ~isempty(strfind(tline,'EBLINK')) || ~isempty(strfind(tline,'SBLINK'))
+					continue;
+				end
+
+				if ~isempty(strfind(tline,'ESACC'))
+					tline_snap = tline;
+					t_buffer=strread(tline_snap,'%s','delimiter',' ');
+
+					sac_x_start = t_buffer{4};
+					sac_y_start = t_buffer{5};
+
+					sac_x_end = t_buffer{6};
+					sac_y_end = t_buffer{7};
+
+					if strcmp(t_buffer{4}(1),'.')
+						sac_x_start = '0';
+					end
+
+					if strcmp(t_buffer{5}(1),'.')
+						sac_y_start = '0';
+					end
+
+					if strcmp(t_buffer{6}(1),'.')
+						sac_x_end = '0';
+					end
+
+					if strcmp(t_buffer{7}(1),'.')
+						sac_y_end = '0';
+					end
+
+					fprintf(fid_temp_start,'%s,%s\n',sac_x_start,sac_y_start);
+					fprintf(fid_temp_end,'%s,%s\n',sac_x_end,sac_y_end);
+
+				end
+
+			end
+
+			break;
+
+		end
+
+	end
+
+end
+
+fclose('all');
+
